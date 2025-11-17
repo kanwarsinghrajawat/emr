@@ -1,0 +1,156 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum EpisodeStatus {
+  DRAFT
+  OPEN
+  IN_PROGRESS
+  COLLECTED
+  RELEASED
+  QC_RETEST
+  ADMIN_RETEST
+  MISSED
+}
+
+enum AttemptStatus {
+  OPEN
+  COLLECTED
+  MISSED
+  RELEASED
+  QC_RETEST
+  ADMIN_RETEST
+}
+
+enum AttemptDayStatus {
+  OPEN
+  COMPLETED
+  MISSED
+}
+
+enum Aggressiveness {
+  BASE
+  AGGRESSIVE
+  STRETCH
+}
+
+enum NotificationKind {
+  ORDER_CREATED
+  RETEST_TRIGGERED
+  RESULT_RELEASED
+}
+
+model Episode {
+  id          String         @id @default(cuid())
+  clinic      String
+  provider    String
+  patientName String
+  patientDob  DateTime
+  patientMrn  String
+  icd10       String
+  mobile      String
+  email       String
+  address     String
+  status      EpisodeStatus  @default(DRAFT)
+  attempts    Attempt[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Attempt {
+  id           String            @id @default(cuid())
+  episode      Episode           @relation(fields: [episodeId], references: [id])
+  episodeId    String
+  attemptNo    Int
+  day1Status   AttemptDayStatus?
+  day2Status   AttemptDayStatus?
+  day3Status   AttemptDayStatus?
+  status       AttemptStatus     @default(OPEN)
+  qcReason     String?
+  classification String?
+  romScore     Int?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model SalesRep {
+  email         String              @id
+  name          String
+  territory     String
+  monthlyGoal   Int
+  aggressiveness Aggressiveness      @default(BASE)
+  clinics       ClinicAssignment[]
+  notifications Notification[]
+  providers     Provider[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+model ClinicAssignment {
+  id        String   @id @default(cuid())
+  clinic    String   @unique
+  rep       SalesRep @relation(fields: [repEmail], references: [email])
+  repEmail  String
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  rep       SalesRep?        @relation(fields: [repEmail], references: [email])
+  repEmail  String?
+  kind      NotificationKind
+  payload   Json
+  createdAt DateTime         @default(now())
+}
+
+model Provider {
+  npi        String              @id
+  firstName  String
+  lastName   String
+  specialty  String
+  org        String
+  city       String
+  state      String
+  phone      String?
+  fax        String?
+  email      String?
+  rep        SalesRep?           @relation(fields: [repEmail], references: [email])
+  repEmail   String?
+  notes      ProviderNote[]
+  interactions ProviderInteraction[]
+  stats      ProviderStat[]
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+}
+
+model ProviderNote {
+  id          String    @id @default(cuid())
+  provider    Provider  @relation(fields: [providerNpi], references: [npi])
+  providerNpi String
+  body        String
+  createdAt   DateTime  @default(now())
+}
+
+model ProviderInteraction {
+  id          String    @id @default(cuid())
+  provider    Provider  @relation(fields: [providerNpi], references: [npi])
+  providerNpi String
+  channel     String
+  summary     String
+  createdAt   DateTime  @default(now())
+}
+
+model ProviderStat {
+  id          String    @id @default(cuid())
+  provider    Provider  @relation(fields: [providerNpi], references: [npi])
+  providerNpi String
+  period      String
+  icd10       String
+  count       Int
+  reimb       Int
+}
