@@ -53,7 +53,7 @@ export default function LandingPage() {
           Prudent EMR Lite · CyPath®️ Lung Workflow Portal
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-white/80">
-          Toggle between personas, rehearse flows A–E, and hand back pixel-perfect specs to Kanwar for the Figma kit.
+          Switch between personas to explore Provider, Lab/QC, Sales, Executive, and CRM workflows in one streamlined portal.
         </p>
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
           <span className="rounded-full bg-white/10 px-4 py-1 font-semibold">White-label ready</span>
